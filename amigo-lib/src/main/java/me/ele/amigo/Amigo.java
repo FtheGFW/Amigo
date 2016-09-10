@@ -10,6 +10,7 @@ import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Process;
+import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.Log;
@@ -68,6 +69,7 @@ public class Amigo extends Application {
         super.onCreate();
         Log.e(TAG, "onCreate");
 
+        long t1 = SystemClock.elapsedRealtime();
         directory = new File(getFilesDir(), "amigo");
         if (!directory.exists()) {
             directory.mkdirs();
@@ -105,6 +107,7 @@ public class Amigo extends Application {
                 Log.e(TAG, "demoApk not exist");
                 clear(this);
                 runOriginalApplication(originalClassLoader);
+                Log.d(TAG, "onCreate #demoApk not exist : consumed " + (SystemClock.elapsedRealtime() - t1 ) + " millis");
                 return;
             }
 
@@ -112,6 +115,7 @@ public class Amigo extends Application {
                 Log.e(TAG, "signature is illegal");
                 clear(this);
                 runOriginalApplication(originalClassLoader);
+                Log.d(TAG, "onCreate #signature is illegal : consumed " + (SystemClock.elapsedRealtime() - t1 ) + " millis");
                 return;
             }
 
@@ -119,12 +123,14 @@ public class Amigo extends Application {
                 Log.e(TAG, "patch apk version cannot be less than host apk");
                 clear(this);
                 runOriginalApplication(originalClassLoader);
+                Log.d(TAG, "onCreate #patch apk version cannot be less than host apk : consumed " + (SystemClock.elapsedRealtime() - t1 ) + " millis");
                 return;
             }
 
             if (!ProcessUtils.isMainProcess(this) && isPatchApkFirstRun(sp)) {
                 Log.e(TAG, "none main process and patch apk is not released yet");
                 runOriginalApplication(originalClassLoader);
+                Log.d(TAG, "onCreate #none main process and patch apk is not released yet : consumed " + (SystemClock.elapsedRealtime() - t1 ) + " millis");
                 return;
             }
 
@@ -143,6 +149,8 @@ public class Amigo extends Application {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+
+        Log.d(TAG, "onCreate: consumed " + (SystemClock.elapsedRealtime() - t1 ) + " millis");
     }
 
     private void runPatchApk(SharedPreferences sp) throws LoadPatchApkException {
@@ -223,6 +231,8 @@ public class Amigo extends Application {
 
 
     private void checkDexAndSoChecksum() throws IOException, NoSuchAlgorithmException {
+        long t1 = SystemClock.elapsedRealtime();
+
         SharedPreferences sp = getSharedPreferences(SP_NAME, MODE_MULTI_PROCESS);
         File[] dexFiles = dexDir.listFiles();
         for (File dexFile : dexFiles) {
@@ -254,6 +264,7 @@ public class Amigo extends Application {
                 }
             }
         }
+        Log.d(TAG, "checkDexAndSoChecksum: consumed " + (SystemClock.elapsedRealtime() - t1 ) + " millis");
     }
 
     private void setNativeLibraryDirectories(AmigoClassLoader hackClassLoader)
@@ -451,8 +462,10 @@ public class Amigo extends Application {
 
     private static boolean isSignatureRight(Context context, File apkFile) {
         try {
+            long t1 = SystemClock.elapsedRealtime();
             Signature appSig = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_SIGNATURES).signatures[0];
             Signature demoSig = context.getPackageManager().getPackageArchiveInfo(apkFile.getAbsolutePath(), PackageManager.GET_SIGNATURES).signatures[0];
+            Log.d(TAG, "isSignatureRight: consumed " + ( SystemClock.elapsedRealtime() - t1 ) + " millis");
             return appSig.hashCode() == demoSig.hashCode();
         } catch (Exception e) {
             e.printStackTrace();
