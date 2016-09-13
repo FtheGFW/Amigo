@@ -168,11 +168,16 @@ class AmigoPlugin implements Plugin<Project> {
     }
 
     String getAppName(File manifestFile) {
-        def manifest = new XmlParser().parse(manifestFile)
-        def androidTag = new Namespace("http://schemas.android.com/apk/res/android", 'android')
         if (manifestFile.exists()) {
-            return manifest.application[0].attribute(androidTag.name)
+            def manifest = new XmlParser().parse(manifestFile)
+            def androidTag = new Namespace("http://schemas.android.com/apk/res/android", 'android')
+            String appName = manifest.application[0].attribute(androidTag.name)
+            if(appName == null || appName.isEmpty()) {
+                appName = "android.app.Application"
+            }
+            return appName
         }
+
         return null
     }
 
