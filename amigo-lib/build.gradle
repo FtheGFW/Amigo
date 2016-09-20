@@ -11,13 +11,7 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
+        consumerProguardFiles 'proguard-rules.txt'
     }
 }
 
@@ -29,7 +23,7 @@ def GROUP = 'me.ele'
 def ARTIFACTID = 'amigo-lib'
 
 group = GROUP
-version = '0.0.1-beta1'
+version = VERSION
 
 install {
     repositories.mavenInstaller {
@@ -62,38 +56,48 @@ install {
     }
 }
 
+try {
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
-Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
-
-bintray {
-    user = properties.getProperty("bintrayUser")
-    key = properties.getProperty("bintrayApiKey")
-    configurations = ['archives']
-    pkg {
-        repo = 'maven'
-        name = ARTIFACTID
-        userOrg = user
-        licenses = ['Apache-2.0']
-        vcsUrl = 'https://github.com/eleme/Amigo'
+    bintray {
+        user = properties.getProperty("bintrayUser")
+        key = properties.getProperty("bintrayApiKey")
+        configurations = ['archives']
+        pkg {
+            repo = 'maven'
+            name = ARTIFACTID
+            userOrg = user
+            licenses = ['Apache-2.0']
+            vcsUrl = 'https://github.com/eleme/Amigo'
+        }
     }
+
+    task sourcesJar(type: Jar) {
+        from android.sourceSets.main.java.srcDirs
+        classifier = 'sources'
+    }
+
+    task javadoc(type: Javadoc) {
+        source = android.sourceSets.main.java.srcDirs
+        classpath = files(project.android.getBootClasspath())
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+    artifacts {
+        archives javadocJar
+        archives sourcesJar
+    }
+} catch (Exception e) {
+    println e
 }
 
-task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
-}
-
-task javadoc(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath = files(project.android.getBootClasspath())
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-artifacts {
-    archives javadocJar
-    archives sourcesJar
+// configure local maven, release key, and the like
+try {
+    apply from: "${project.projectDir}/mybuild.gradle"
+} catch (Exception e) {
+    println e.toString()
 }

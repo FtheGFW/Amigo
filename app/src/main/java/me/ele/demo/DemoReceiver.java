@@ -1,4 +1,4 @@
-package me.ele.amigo.demo;
+package me.ele.demo;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

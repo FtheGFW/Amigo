@@ -1,4 +1,4 @@
-package me.ele.amigo.demo;
+package me.ele.demo;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -6,8 +6,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-
-import java.io.File;
 
 import me.ele.amigo.Amigo;
 

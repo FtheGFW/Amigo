@@ -13,6 +13,9 @@ public class FileUtils {
         FileOutputStream outputStream = null;
         FileInputStream inputStream = null;
         try {
+            if (!dstFile.exists()) {
+                dstFile.getParentFile().mkdirs();
+            }
             outputStream = new FileOutputStream(dstFile);
             inputStream = new FileInputStream(sourceFile);
             copyFile(inputStream, outputStream);
@@ -40,7 +43,7 @@ public class FileUtils {
     }
 
     public static void copyFile(InputStream in, OutputStream out) throws IOException {
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[8 * 1024];
         int read;
         while ((read = in.read(buffer)) != -1) {
             out.write(buffer, 0, read);
@@ -48,6 +51,10 @@ public class FileUtils {
     }
 
     public static void removeFile(File file) {
+        removeFile(file, true);
+    }
+
+    public static void removeFile(File file, boolean isDirRemovable) {
         if (file == null || !file.exists()) {
             return;
         }
@@ -67,7 +74,11 @@ public class FileUtils {
                     removeFile(f);
                 }
             }
-            file.delete();
+
+            if (isDirRemovable) {
+                file.delete();
+            }
         }
     }
+
 }
